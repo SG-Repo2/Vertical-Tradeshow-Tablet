@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "VS1 Vertical Pump Interactive",
+    "slug": "vs1-vertical-pump-interactive",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "vs1verticalpump",
+    "newArchEnabled": false,
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.verticalpump.vs1interactive",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 23,
+            "buildToolsVersion": "34.0.0",
+            "useLegacyPackaging": true
+          }
+        }
+      ]
+    ],
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "acb3b898-b671-4f90-b85b-e90667456b74"
+      }
+    }
+  }
+}
