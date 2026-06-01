@@ -1,21 +1,5 @@
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react-native";
-import {
-  Animated,
-  Image,
-  PanResponder,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Hotspot } from "./Hotspot";
 import {
@@ -44,8 +28,10 @@ type Point = {
 };
 
 const PUMP_ASPECT_RATIO = 16 / 9;
-const KIOSK_DEFAULT_ZOOM = 1.95;
-const KIOSK_IMAGE_OFFSET_Y = 52;
+const STANDARD_IMAGE_ZOOM = 1.12;
+const KIOSK_DEFAULT_ZOOM = 2.05;
+const KIOSK_IMAGE_OFFSET_Y = 36;
+const oceanWaveBackground = require("../../assets/vertical/hydro-ocean-wave-background.gif");
 const HOTSPOT_MARKER_POSITIONS: Record<string, Point> = {
   "pump-motor-alignment": { x: 43, y: 10 },
   "packing-best-practice": { x: 43, y: 22 },
@@ -67,21 +53,11 @@ export function PumpCanvas({
   variant = "standard",
 }: PumpCanvasProps) {
   const [stageSize, setStageSize] = useState<Size>({ width: 0, height: 0 });
-  const defaultZoom = variant === "kiosk" ? KIOSK_DEFAULT_ZOOM : 1;
-  const [zoom, setZoom] = useState(defaultZoom);
-  const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
+  // The pump is always presented at a fixed, fully-visible fit — there is no
+  // manual zoom/pan on the exhibit. Kiosk mode scales the artwork up to fill
+  // the reclaimed vertical space and crop the empty side margins.
+  const imageOffsetY = variant === "kiosk" ? KIOSK_IMAGE_OFFSET_Y : 0;
   const pulse = useRef(new Animated.Value(0)).current;
-  const panRef = useRef(pan);
-  const panStartRef = useRef(pan);
-
-  useEffect(() => {
-    panRef.current = pan;
-  }, [pan]);
-
-  useEffect(() => {
-    setZoom(defaultZoom);
-    setPan({ x: 0, y: 0 });
-  }, [defaultZoom]);
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -125,7 +101,22 @@ export function PumpCanvas({
       top: (stageSize.height - height) / 2,
     };
   }, [stageSize]);
-  const imageOffsetY = variant === "kiosk" ? KIOSK_IMAGE_OFFSET_Y : 0;
+
+  // Scale the kiosk artwork up to the design zoom, but never beyond what the
+  // stage height can show once the title offset is accounted for. This keeps
+  // the whole pump visible (no top/bottom clipping) even when the usable
+  // display height is reduced by Android system bars.
+  const zoom = useMemo(() => {
+    if (variant !== "kiosk") {
+      return STANDARD_IMAGE_ZOOM;
+    }
+    if (!imageRect.height) {
+      return KIOSK_DEFAULT_ZOOM;
+    }
+    const heightLimitedZoom =
+      (stageSize.height - 2 * imageOffsetY) / imageRect.height;
+    return Math.max(1, Math.min(KIOSK_DEFAULT_ZOOM, heightLimitedZoom));
+  }, [variant, imageRect.height, stageSize.height, imageOffsetY]);
 
   const hotspotPoints = useMemo(
     () =>
@@ -150,13 +141,11 @@ export function PumpCanvas({
       x:
         imageRect.left +
         imageRect.width / 2 +
-        pan.x +
         (point.x - imageRect.width / 2) * zoom,
       y:
         imageRect.top +
         imageOffsetY +
         imageRect.height / 2 +
-        pan.y +
         (point.y - imageRect.height / 2) * zoom,
     }),
     [
@@ -165,8 +154,6 @@ export function PumpCanvas({
       imageRect.top,
       imageRect.width,
       imageOffsetY,
-      pan.x,
-      pan.y,
       zoom,
     ],
   );
@@ -185,53 +172,8 @@ export function PumpCanvas({
     stageHotspotPoints[0];
   const activePoint = activeHotspot?.point ?? { x: 0, y: 0 };
 
-  const maxPan = useMemo(
-    () => ({
-      x: Math.max(0, (imageRect.width * (zoom - 1)) / 2),
-      y: Math.max(0, (imageRect.height * (zoom - 1)) / 2),
-    }),
-    [imageRect.height, imageRect.width, zoom],
-  );
-
-  const clampPan = useCallback(
-    (next: Point) => ({
-      x: clamp(next.x, -maxPan.x, maxPan.x),
-      y: clamp(next.y, -maxPan.y, maxPan.y),
-    }),
-    [maxPan.x, maxPan.y],
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          zoom > 1.01 &&
-          (Math.abs(gesture.dx) > 5 || Math.abs(gesture.dy) > 5),
-        onPanResponderGrant: () => {
-          panStartRef.current = panRef.current;
-        },
-        onPanResponderMove: (_, gesture) => {
-          setPan(
-            clampPan({
-              x: panStartRef.current.x + gesture.dx,
-              y: panStartRef.current.y + gesture.dy,
-            }),
-          );
-        },
-      }),
-    [clampPan, zoom],
-  );
-
-  const setZoomLevel = useCallback((nextZoom: number) => {
-    const next = clamp(nextZoom, 1, variant === "kiosk" ? 2.65 : 2.25);
-    setZoom(next);
-    if (next === 1) {
-      setPan({ x: 0, y: 0 });
-    }
-  }, [variant]);
-
-  const hotspotTouchSize = variant === "kiosk" ? 60 : largeTouch ? 60 : isStacked ? 50 : 48;
+  const hotspotTouchSize =
+    variant === "kiosk" ? 64 : largeTouch ? 60 : isStacked ? 50 : 48;
   const activeRingSize = hotspotTouchSize + (variant === "kiosk" ? 18 : 16);
   const pulseOpacity = pulse.interpolate({
     inputRange: [0, 1],
@@ -256,10 +198,19 @@ export function PumpCanvas({
           setStageSize({ width, height });
         }}
         style={styles.stage}
-        {...panResponder.panHandlers}
       >
+        <View pointerEvents="none" style={styles.backgroundLayer}>
+          <Image
+            resizeMode="cover"
+            source={oceanWaveBackground}
+            style={styles.backgroundImage}
+          />
+          <View style={styles.backgroundScrim} />
+        </View>
+
         {imageRect.width > 0 ? (
           <>
+            {/* Layer 2 — Pump visualization. */}
             <Animated.View
               style={[
                 styles.imageLayer,
@@ -268,11 +219,7 @@ export function PumpCanvas({
                   top: imageRect.top + imageOffsetY,
                   width: imageRect.width,
                   height: imageRect.height,
-                  transform: [
-                    { translateX: pan.x },
-                    { translateY: pan.y },
-                    { scale: zoom },
-                  ],
+                  transform: [{ scale: zoom }],
                 },
               ]}
             >
@@ -284,6 +231,9 @@ export function PumpCanvas({
                 style={styles.pumpImage}
               />
             </Animated.View>
+
+            {/* Permanent diagram header — title stays top-left and wraps. It is
+                not anchored to any hotspot and shows no floating callouts. */}
             <View
               pointerEvents="none"
               style={[
@@ -302,6 +252,8 @@ export function PumpCanvas({
                 {activeTopic.hotspot.label}
               </Text>
             </View>
+
+            {/* Layer 3 — Interactive hotspots. */}
             <Animated.View
               pointerEvents="none"
               style={[
@@ -333,88 +285,8 @@ export function PumpCanvas({
           <Text style={styles.loadingText}>Loading pump view</Text>
         )}
       </View>
-
-      <View
-        style={[
-          styles.zoomControls,
-          largeTouch && styles.zoomControlsLargeTouch,
-        ]}
-      >
-        <IconButton
-          accessibilityLabel="Zoom out pump image"
-          disabled={zoom <= 1}
-          largeTouch={largeTouch}
-          onPress={() => setZoomLevel(zoom - 0.25)}
-        >
-          <ZoomOut
-            color={colors.pumpBlueDark}
-            size={largeTouch ? 24 : 18}
-            strokeWidth={2.3}
-          />
-        </IconButton>
-        <IconButton
-          accessibilityLabel="Fit pump image to view"
-          largeTouch={largeTouch}
-          onPress={() => setZoomLevel(defaultZoom)}
-        >
-          <Maximize2
-            color={colors.pumpBlueDark}
-            size={largeTouch ? 24 : 18}
-            strokeWidth={2.3}
-          />
-        </IconButton>
-        <IconButton
-          accessibilityLabel="Zoom in pump image"
-          disabled={zoom >= (variant === "kiosk" ? 2.65 : 2.25)}
-          largeTouch={largeTouch}
-          onPress={() => setZoomLevel(zoom + 0.25)}
-        >
-          <ZoomIn
-            color={colors.pumpBlueDark}
-            size={largeTouch ? 24 : 18}
-            strokeWidth={2.3}
-          />
-        </IconButton>
-      </View>
     </View>
   );
-}
-
-type IconButtonProps = {
-  accessibilityLabel: string;
-  children: ReactNode;
-  disabled?: boolean;
-  largeTouch?: boolean;
-  onPress: () => void;
-};
-
-function IconButton({
-  accessibilityLabel,
-  children,
-  disabled = false,
-  largeTouch = false,
-  onPress,
-}: IconButtonProps) {
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.iconButton,
-        largeTouch && styles.iconButtonLargeTouch,
-        pressed && styles.iconButtonPressed,
-        disabled && styles.iconButtonDisabled,
-      ]}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }
 
 const styles = StyleSheet.create({
@@ -422,10 +294,14 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 300,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 4,
+    borderColor: colors.pumpBlueDark,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
   },
   rootKiosk: {
     minHeight: 0,
@@ -437,7 +313,19 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
+  },
+  backgroundLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+  },
+  backgroundImage: {
+    width: "100%",
+    height: "100%",
+  },
+  backgroundScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
   imageLayer: {
     position: "absolute",
@@ -449,38 +337,53 @@ const styles = StyleSheet.create({
   pulseRing: {
     position: "absolute",
     borderWidth: 3,
-    borderColor: colors.cyan,
+    borderColor: colors.gold,
     borderRadius: 999,
-    backgroundColor: "rgba(22, 164, 200, 0.12)",
+    backgroundColor: "rgba(225, 192, 55, 0.14)",
   },
   diagramTitle: {
     position: "absolute",
     top: 20,
     left: 24,
-    right: 176,
+    right: 24,
     zIndex: 20,
+    alignItems: "center",
   },
   diagramTitleKiosk: {
-    right: 188,
+    top: 28,
+    left: 32,
+    right: 32,
   },
   diagramTitleLargeTouch: {
     top: 28,
     left: 32,
-    right: 220,
+    right: 32,
   },
   diagramTitleText: {
+    overflow: "hidden",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderWidth: 2,
+    borderColor: colors.gold,
+    borderRadius: radii.md,
+    backgroundColor: "rgba(255, 255, 255, 0.94)",
     color: colors.pumpBlueDark,
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 29,
+    fontSize: 28,
+    fontWeight: "900",
+    lineHeight: 34,
+    textAlign: "center",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
   },
   diagramTitleTextKiosk: {
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 38,
+    lineHeight: 44,
   },
   diagramTitleTextLargeTouch: {
-    fontSize: 30,
-    lineHeight: 36,
+    fontSize: 34,
+    lineHeight: 40,
   },
   loadingText: {
     alignSelf: "center",
@@ -488,39 +391,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     fontWeight: "700",
-  },
-  zoomControls: {
-    position: "absolute",
-    right: 20,
-    top: 20,
-    flexDirection: "row",
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    backgroundColor: colors.surface,
-  },
-  zoomControlsLargeTouch: {
-    right: 28,
-    top: 28,
-    borderRadius: radii.xl,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-  },
-  iconButtonLargeTouch: {
-    width: 56,
-    height: 56,
-  },
-  iconButtonPressed: {
-    backgroundColor: colors.cyanSoft,
-  },
-  iconButtonDisabled: {
-    opacity: 0.35,
   },
 });

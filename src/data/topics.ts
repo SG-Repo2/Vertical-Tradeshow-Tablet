@@ -19,7 +19,7 @@ export type PumpTopic = {
   fieldCheck: string;
 };
 
-export const pumpCrossSection = require("../../assets/vertical/VS1_CrossSection.png");
+export const pumpCrossSection = require("../../assets/vertical/VS1_CrossSection_Transparent.png");
 
 export const pumpTopics: PumpTopic[] = [
   {

@@ -134,7 +134,7 @@ export function TopicPanel({
               largeTouch={largeTouch}
               icon={
                 <ShieldCheck
-                  color={colors.success}
+                  color={colors.surface}
                   size={largeTouch ? 22 : isConsole ? 20 : 18}
                   strokeWidth={2.4}
                 />
@@ -149,14 +149,14 @@ export function TopicPanel({
               largeTouch={largeTouch}
               icon={
                 <Gauge
-                  color={colors.amber}
+                  color={colors.pumpBlueDark}
                   size={largeTouch ? 22 : isConsole ? 20 : 18}
                   strokeWidth={2.4}
                 />
               }
               label="Field Check"
               text={topic.fieldCheck}
-              tone="amber"
+              tone="gold"
             />
           </View>
         </View>
@@ -172,7 +172,7 @@ type InfoBlockProps = {
   label: string;
   largeTouch?: boolean;
   text: string;
-  tone: "blue" | "amber";
+  tone: "blue" | "gold";
 };
 
 function InfoBlock({
@@ -191,7 +191,7 @@ function InfoBlock({
         console && styles.infoBlockConsole,
         compact && styles.infoBlockConsoleCompact,
         largeTouch && styles.infoBlockLargeTouch,
-        tone === "blue" ? styles.infoBlockBlue : styles.infoBlockAmber,
+        tone === "blue" ? styles.infoBlockBlue : styles.infoBlockGold,
       ]}
     >
       <View style={[styles.infoHeader, compact && styles.infoHeaderCompact]}>
@@ -199,6 +199,7 @@ function InfoBlock({
         <Text
           style={[
             styles.infoLabel,
+            tone === "gold" && styles.infoLabelGold,
             compact && styles.infoLabelCompact,
             largeTouch && styles.infoLabelLargeTouch,
           ]}
@@ -209,6 +210,7 @@ function InfoBlock({
       <Text
         style={[
           styles.infoText,
+          tone === "gold" && styles.infoTextGold,
           compact && styles.infoTextCompact,
           largeTouch && styles.infoTextLargeTouch,
         ]}
@@ -223,10 +225,14 @@ const styles = StyleSheet.create({
   panel: {
     gap: spacing.md,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: colors.borderStrong,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
   },
   panelLargeTouch: {
     gap: spacing.lg,
@@ -274,6 +280,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "900",
     letterSpacing: 0,
+    textAlign: "center",
+    position: "relative",
+    top: -12, // move it up without shifting layout below
   },
   titleLargeTouch: {
     fontSize: 34,
@@ -378,12 +387,12 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   infoBlockBlue: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: colors.pumpBlue,
+    backgroundColor: colors.pumpBlue,
   },
-  infoBlockAmber: {
-    borderColor: "#e6cb7c",
-    backgroundColor: colors.amberSoft,
+  infoBlockGold: {
+    borderColor: colors.gold,
+    backgroundColor: colors.gold,
   },
   infoHeader: {
     flexDirection: "row",
@@ -394,10 +403,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   infoLabel: {
-    color: colors.text,
+    color: colors.surface,
     fontSize: 13,
     fontWeight: "900",
     textTransform: "uppercase",
+  },
+  infoLabelGold: {
+    color: colors.pumpBlueDark,
   },
   infoLabelLargeTouch: {
     fontSize: 16,
@@ -406,9 +418,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   infoText: {
-    color: colors.text,
+    color: colors.surface,
     fontSize: 14,
     lineHeight: 20,
+  },
+  infoTextGold: {
+    color: colors.pumpBlueDark,
   },
   infoTextLargeTouch: {
     fontSize: 17,

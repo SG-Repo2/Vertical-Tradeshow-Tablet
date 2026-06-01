@@ -108,12 +108,12 @@ const styles = StyleSheet.create({
   },
   markerCircleInactive: {
     borderWidth: 3,
-    borderColor: colors.pumpBlueDark,
+    borderColor: colors.pumpBlue,
     backgroundColor: colors.surface,
   },
   markerCircleActive: {
     borderWidth: 3,
-    borderColor: colors.pumpBlueDark,
+    borderColor: colors.gold,
     backgroundColor: colors.pumpBlueDark,
   },
   markerText: {
