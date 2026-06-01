@@ -31,11 +31,15 @@ export function TrainingShell() {
     forceKioskPreview || (height >= 1000 && height > width * 1.12);
   const isCompactKiosk = isPortraitKiosk && (height < 1120 || width < 900);
   const isWideLayout = !isPortraitKiosk && width >= 920 && width >= height;
+  const isLargeTouch = !isPortraitKiosk && width >= 1600 && width >= height;
   const isSmallLayout = width < 760;
   const activeTopic = pumpTopics[activeIndex];
   const panelWidth = useMemo(
-    () => Math.min(Math.max(width * 0.32, 360), 470),
-    [width],
+    () =>
+      isLargeTouch
+        ? Math.min(Math.max(width * 0.34, 500), 680)
+        : Math.min(Math.max(width * 0.32, 360), 470),
+    [width, isLargeTouch],
   );
   const stackedCanvasHeight = Math.min(Math.max(height * 0.42, 330), 520);
 
@@ -51,6 +55,7 @@ export function TrainingShell() {
       style={[
         styles.workspace,
         isWideLayout ? styles.workspaceWide : styles.workspaceStacked,
+        isLargeTouch && styles.workspaceLargeTouch,
       ]}
     >
       <View
@@ -62,6 +67,7 @@ export function TrainingShell() {
         <PumpCanvas
           activeTopic={activeTopic}
           isStacked={!isWideLayout}
+          largeTouch={isLargeTouch}
           onSelectTopic={selectTopic}
           topics={pumpTopics}
           variant="standard"
@@ -69,6 +75,7 @@ export function TrainingShell() {
       </View>
       <TopicPanel
         currentIndex={activeIndex}
+        largeTouch={isLargeTouch}
         style={isWideLayout ? { width: panelWidth } : styles.panelStacked}
         topic={activeTopic}
         totalTopics={pumpTopics.length}
@@ -86,10 +93,18 @@ export function TrainingShell() {
           styles.header,
           isPortraitKiosk && styles.headerKiosk,
           isCompactKiosk && styles.headerKioskCompact,
+          isLargeTouch && styles.headerLargeTouch,
         ]}
       >
         <View style={styles.titleGroup}>
-          <Text style={styles.appLabel}>VS1 Vertical Pump Interactive</Text>
+          <Text
+            style={[
+              styles.appLabel,
+              isLargeTouch && styles.appLabelLargeTouch,
+            ]}
+          >
+            VS1 Vertical Pump Interactive
+          </Text>
           <Text
             adjustsFontSizeToFit
             minimumFontScale={0.82}
@@ -98,6 +113,7 @@ export function TrainingShell() {
               styles.headerTitle,
               isPortraitKiosk && styles.headerTitleKiosk,
               isCompactKiosk && styles.headerTitleKioskCompact,
+              isLargeTouch && styles.headerTitleLargeTouch,
             ]}
           >
             {activeTopic.title}
@@ -105,11 +121,33 @@ export function TrainingShell() {
         </View>
 
         {!isSmallLayout ? (
-          <View style={styles.currentPill}>
-            <Home color={colors.cyan} size={17} strokeWidth={2.4} />
+          <View
+            style={[
+              styles.currentPill,
+              isLargeTouch && styles.currentPillLargeTouch,
+            ]}
+          >
+            <Home
+              color={colors.cyan}
+              size={isLargeTouch ? 22 : 17}
+              strokeWidth={2.4}
+            />
             <View style={styles.currentCopy}>
-              <Text style={styles.currentLabel}>Current Module</Text>
-              <Text numberOfLines={1} style={styles.currentValue}>
+              <Text
+                style={[
+                  styles.currentLabel,
+                  isLargeTouch && styles.currentLabelLargeTouch,
+                ]}
+              >
+                Current Module
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.currentValue,
+                  isLargeTouch && styles.currentValueLargeTouch,
+                ]}
+              >
                 {activeTopic.navLabel}
               </Text>
             </View>
@@ -122,11 +160,23 @@ export function TrainingShell() {
           onPress={() => setActiveIndex(0)}
           style={({ pressed }) => [
             styles.resetButton,
+            isLargeTouch && styles.resetButtonLargeTouch,
             pressed && styles.resetButtonPressed,
           ]}
         >
-          <RotateCcw color={colors.pumpBlueDark} size={18} strokeWidth={2.4} />
-          <Text style={styles.resetText}>Reset</Text>
+          <RotateCcw
+            color={colors.pumpBlueDark}
+            size={isLargeTouch ? 22 : 18}
+            strokeWidth={2.4}
+          />
+          <Text
+            style={[
+              styles.resetText,
+              isLargeTouch && styles.resetTextLargeTouch,
+            ]}
+          >
+            Reset
+          </Text>
         </Pressable>
       </View>
 
@@ -166,7 +216,14 @@ export function TrainingShell() {
           </View>
         </View>
       ) : isWideLayout ? (
-        <View style={styles.workspaceHolder}>{workspace}</View>
+        <View
+          style={[
+            styles.workspaceHolder,
+            isLargeTouch && styles.workspaceHolderLargeTouch,
+          ]}
+        >
+          {workspace}
+        </View>
       ) : (
         <ScrollView
           contentContainerStyle={styles.workspaceScrollContent}
@@ -180,6 +237,7 @@ export function TrainingShell() {
         <TopicRail
           activeTopicId={activeTopic.id}
           currentIndex={activeIndex}
+          largeTouch={isLargeTouch}
           onSelectTopic={selectTopic}
           topics={pumpTopics}
         />
@@ -207,6 +265,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.surface,
   },
+  headerLargeTouch: {
+    minHeight: 96,
+    gap: spacing.xl,
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.lg,
+  },
   headerKiosk: {
     minHeight: 82,
     paddingHorizontal: spacing.xl,
@@ -229,11 +293,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     textTransform: "uppercase",
   },
+  appLabelLargeTouch: {
+    fontSize: 16,
+  },
   headerTitle: {
     color: colors.text,
     fontSize: 24,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  headerTitleLargeTouch: {
+    fontSize: 34,
   },
   headerTitleKiosk: {
     fontSize: 30,
@@ -254,6 +324,14 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: colors.surfaceMuted,
   },
+  currentPillLargeTouch: {
+    minWidth: 240,
+    maxWidth: 340,
+    minHeight: 64,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.xl,
+  },
   currentCopy: {
     flex: 1,
     minWidth: 0,
@@ -264,10 +342,16 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textTransform: "uppercase",
   },
+  currentLabelLargeTouch: {
+    fontSize: 13,
+  },
   currentValue: {
     color: colors.pumpBlueDark,
     fontSize: 15,
     fontWeight: "900",
+  },
+  currentValueLargeTouch: {
+    fontSize: 20,
   },
   resetButton: {
     minHeight: 44,
@@ -281,6 +365,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: colors.surface,
   },
+  resetButtonLargeTouch: {
+    minHeight: 56,
+    minWidth: 120,
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radii.xl,
+  },
   resetButtonPressed: {
     backgroundColor: colors.cyanSoft,
   },
@@ -289,9 +380,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
   },
+  resetTextLargeTouch: {
+    fontSize: 18,
+  },
   workspaceHolder: {
     flex: 1,
     padding: spacing.lg,
+  },
+  workspaceHolderLargeTouch: {
+    padding: spacing.xxl,
+  },
+  workspaceLargeTouch: {
+    gap: spacing.xl,
   },
   workspaceScroll: {
     flex: 1,

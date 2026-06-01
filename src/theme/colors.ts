@@ -25,10 +25,13 @@ export const spacing = {
   md: 12,
   lg: 16,
   xl: 24,
+  xxl: 32,
+  xxxl: 40,
 };
 
 export const radii = {
   sm: 4,
   md: 6,
   lg: 8,
+  xl: 12,
 };

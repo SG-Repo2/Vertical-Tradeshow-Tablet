@@ -14,6 +14,7 @@ type TopicRailProps = {
   activeTopicId: string;
   compact?: boolean;
   currentIndex: number;
+  largeTouch?: boolean;
   onSelectTopic: (topicId: string) => void;
   orientation?: "horizontal" | "vertical";
   topics: PumpTopic[];
@@ -23,6 +24,7 @@ export function TopicRail({
   activeTopicId,
   compact = false,
   currentIndex,
+  largeTouch = false,
   onSelectTopic,
   orientation = "horizontal",
   topics,
@@ -36,6 +38,7 @@ export function TopicRail({
         styles.rail,
         isVertical && styles.railVertical,
         compactVertical && styles.railVerticalCompact,
+        largeTouch && styles.railLargeTouch,
       ]}
     >
       <ScrollView
@@ -47,6 +50,7 @@ export function TopicRail({
           styles.topicScrollerContent,
           isVertical && styles.topicScrollerContentVertical,
           compactVertical && styles.topicScrollerContentVerticalCompact,
+          largeTouch && styles.topicScrollerContentLargeTouch,
         ]}
       >
         {topics.map((topic, index) => {
@@ -64,6 +68,7 @@ export function TopicRail({
                 styles.topicButton,
                 isVertical && styles.topicButtonVertical,
                 compactVertical && styles.topicButtonVerticalCompact,
+                largeTouch && styles.topicButtonLargeTouch,
                 active && styles.topicButtonActive,
                 pressed && styles.topicButtonPressed,
               ]}
@@ -73,18 +78,24 @@ export function TopicRail({
                   styles.topicIndex,
                   isVertical && styles.topicIndexVertical,
                   compactVertical && styles.topicIndexVerticalCompact,
+                  largeTouch && styles.topicIndexLargeTouch,
                   active && styles.topicIndexActive,
                   viewed && styles.topicIndexViewed,
                 ]}
               >
                 {viewed && !active ? (
-                  <CheckCircle2 color={colors.surface} size={14} strokeWidth={3} />
+                  <CheckCircle2
+                    color={colors.surface}
+                    size={largeTouch ? 18 : 14}
+                    strokeWidth={3}
+                  />
                 ) : (
                   <Text
                     style={[
                       styles.topicIndexText,
                       isVertical && styles.topicIndexTextVertical,
                       compactVertical && styles.topicIndexTextVerticalCompact,
+                      largeTouch && styles.topicIndexTextLargeTouch,
                       active && styles.topicIndexTextActive,
                     ]}
                   >
@@ -98,6 +109,7 @@ export function TopicRail({
                   styles.topicLabel,
                   isVertical && styles.topicLabelVertical,
                   compactVertical && styles.topicLabelVerticalCompact,
+                  largeTouch && styles.topicLabelLargeTouch,
                   active && styles.topicLabelActive,
                 ]}
               >
@@ -122,6 +134,11 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
+  railLargeTouch: {
+    gap: spacing.lg,
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.lg,
+  },
   railVertical: {
     width: 148,
     alignItems: "stretch",
@@ -145,6 +162,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingRight: spacing.md,
   },
+  topicScrollerContentLargeTouch: {
+    gap: spacing.md,
+    paddingRight: spacing.xl,
+  },
   topicScrollerContentVertical: {
     gap: spacing.md,
     paddingBottom: spacing.lg,
@@ -165,6 +186,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     backgroundColor: colors.surface,
+  },
+  topicButtonLargeTouch: {
+    minWidth: 160,
+    minHeight: 64,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.xl,
   },
   topicButtonVertical: {
     minWidth: 0,
@@ -190,6 +218,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.surfaceMuted,
   },
+  topicIndexLargeTouch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+  },
   topicIndexVertical: {
     width: 30,
     height: 30,
@@ -211,6 +244,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
+  topicIndexTextLargeTouch: {
+    fontSize: 16,
+  },
   topicIndexTextVertical: {
     fontSize: 13,
   },
@@ -225,6 +261,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: "900",
+  },
+  topicLabelLargeTouch: {
+    maxWidth: 120,
+    fontSize: 17,
   },
   topicLabelVertical: {
     flex: 1,

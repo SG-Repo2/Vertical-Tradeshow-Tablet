@@ -3,7 +3,7 @@
     "name": "VS1 Vertical Pump Interactive",
     "slug": "vs1-vertical-pump-interactive",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "light",
     "scheme": "vs1verticalpump",
     "newArchEnabled": false,

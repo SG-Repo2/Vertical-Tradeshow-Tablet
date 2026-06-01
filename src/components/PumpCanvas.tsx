@@ -27,6 +27,7 @@ import { colors, radii, spacing } from "../theme/colors";
 type PumpCanvasProps = {
   activeTopic: PumpTopic;
   isStacked: boolean;
+  largeTouch?: boolean;
   onSelectTopic: (topicId: string) => void;
   topics: PumpTopic[];
   variant?: "standard" | "kiosk";
@@ -60,6 +61,7 @@ const HOTSPOT_MARKER_POSITIONS: Record<string, Point> = {
 export function PumpCanvas({
   activeTopic,
   isStacked,
+  largeTouch = false,
   onSelectTopic,
   topics,
   variant = "standard",
@@ -229,7 +231,7 @@ export function PumpCanvas({
     }
   }, [variant]);
 
-  const hotspotTouchSize = variant === "kiosk" ? 60 : isStacked ? 50 : 48;
+  const hotspotTouchSize = variant === "kiosk" ? 60 : largeTouch ? 60 : isStacked ? 50 : 48;
   const activeRingSize = hotspotTouchSize + (variant === "kiosk" ? 18 : 16);
   const pulseOpacity = pulse.interpolate({
     inputRange: [0, 1],
@@ -241,7 +243,13 @@ export function PumpCanvas({
   });
 
   return (
-    <View style={[styles.root, variant === "kiosk" && styles.rootKiosk]}>
+    <View
+      style={[
+        styles.root,
+        variant === "kiosk" && styles.rootKiosk,
+        largeTouch && styles.rootLargeTouch,
+      ]}
+    >
       <View
         onLayout={(event) => {
           const { width, height } = event.nativeEvent.layout;
@@ -281,12 +289,14 @@ export function PumpCanvas({
               style={[
                 styles.diagramTitle,
                 variant === "kiosk" && styles.diagramTitleKiosk,
+                largeTouch && styles.diagramTitleLargeTouch,
               ]}
             >
               <Text
                 style={[
                   styles.diagramTitleText,
                   variant === "kiosk" && styles.diagramTitleTextKiosk,
+                  largeTouch && styles.diagramTitleTextLargeTouch,
                 ]}
               >
                 {activeTopic.hotspot.label}
@@ -324,26 +334,46 @@ export function PumpCanvas({
         )}
       </View>
 
-      <View style={styles.zoomControls}>
+      <View
+        style={[
+          styles.zoomControls,
+          largeTouch && styles.zoomControlsLargeTouch,
+        ]}
+      >
         <IconButton
           accessibilityLabel="Zoom out pump image"
           disabled={zoom <= 1}
+          largeTouch={largeTouch}
           onPress={() => setZoomLevel(zoom - 0.25)}
         >
-          <ZoomOut color={colors.pumpBlueDark} size={18} strokeWidth={2.3} />
+          <ZoomOut
+            color={colors.pumpBlueDark}
+            size={largeTouch ? 24 : 18}
+            strokeWidth={2.3}
+          />
         </IconButton>
         <IconButton
           accessibilityLabel="Fit pump image to view"
+          largeTouch={largeTouch}
           onPress={() => setZoomLevel(defaultZoom)}
         >
-          <Maximize2 color={colors.pumpBlueDark} size={18} strokeWidth={2.3} />
+          <Maximize2
+            color={colors.pumpBlueDark}
+            size={largeTouch ? 24 : 18}
+            strokeWidth={2.3}
+          />
         </IconButton>
         <IconButton
           accessibilityLabel="Zoom in pump image"
           disabled={zoom >= (variant === "kiosk" ? 2.65 : 2.25)}
+          largeTouch={largeTouch}
           onPress={() => setZoomLevel(zoom + 0.25)}
         >
-          <ZoomIn color={colors.pumpBlueDark} size={18} strokeWidth={2.3} />
+          <ZoomIn
+            color={colors.pumpBlueDark}
+            size={largeTouch ? 24 : 18}
+            strokeWidth={2.3}
+          />
         </IconButton>
       </View>
     </View>
@@ -354,6 +384,7 @@ type IconButtonProps = {
   accessibilityLabel: string;
   children: ReactNode;
   disabled?: boolean;
+  largeTouch?: boolean;
   onPress: () => void;
 };
 
@@ -361,6 +392,7 @@ function IconButton({
   accessibilityLabel,
   children,
   disabled = false,
+  largeTouch = false,
   onPress,
 }: IconButtonProps) {
   return (
@@ -371,6 +403,7 @@ function IconButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.iconButton,
+        largeTouch && styles.iconButtonLargeTouch,
         pressed && styles.iconButtonPressed,
         disabled && styles.iconButtonDisabled,
       ]}
@@ -396,6 +429,9 @@ const styles = StyleSheet.create({
   },
   rootKiosk: {
     minHeight: 0,
+  },
+  rootLargeTouch: {
+    borderRadius: radii.xl,
   },
   stage: {
     flex: 1,
@@ -427,6 +463,11 @@ const styles = StyleSheet.create({
   diagramTitleKiosk: {
     right: 188,
   },
+  diagramTitleLargeTouch: {
+    top: 28,
+    left: 32,
+    right: 220,
+  },
   diagramTitleText: {
     color: colors.pumpBlueDark,
     fontSize: 24,
@@ -436,6 +477,10 @@ const styles = StyleSheet.create({
   diagramTitleTextKiosk: {
     fontSize: 32,
     lineHeight: 38,
+  },
+  diagramTitleTextLargeTouch: {
+    fontSize: 30,
+    lineHeight: 36,
   },
   loadingText: {
     alignSelf: "center",
@@ -455,6 +500,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: colors.surface,
   },
+  zoomControlsLargeTouch: {
+    right: 28,
+    top: 28,
+    borderRadius: radii.xl,
+  },
   iconButton: {
     width: 44,
     height: 44,
@@ -462,6 +512,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRightWidth: 1,
     borderRightColor: colors.border,
+  },
+  iconButtonLargeTouch: {
+    width: 56,
+    height: 56,
   },
   iconButtonPressed: {
     backgroundColor: colors.cyanSoft,

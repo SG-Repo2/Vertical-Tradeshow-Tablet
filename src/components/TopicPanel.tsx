@@ -15,6 +15,7 @@ import { colors, radii, spacing } from "../theme/colors";
 type TopicPanelProps = {
   compact?: boolean;
   currentIndex: number;
+  largeTouch?: boolean;
   style?: StyleProp<ViewStyle>;
   topic: PumpTopic;
   totalTopics: number;
@@ -24,6 +25,7 @@ type TopicPanelProps = {
 export function TopicPanel({
   compact = false,
   currentIndex,
+  largeTouch = false,
   style,
   topic,
   totalTopics,
@@ -38,14 +40,27 @@ export function TopicPanel({
         styles.panel,
         isConsole && styles.panelConsole,
         isCompactConsole && styles.panelConsoleCompact,
+        largeTouch && styles.panelLargeTouch,
         style,
       ]}
     >
       <View style={styles.kickerRow}>
-        <Text style={styles.moduleLabel}>
+        <Text
+          style={[
+            styles.moduleLabel,
+            largeTouch && styles.moduleLabelLargeTouch,
+          ]}
+        >
           Module {String(currentIndex + 1).padStart(2, "0")} / {totalTopics}
         </Text>
-        <Text style={styles.navLabel}>{topic.navLabel}</Text>
+        <Text
+          style={[
+            styles.navLabel,
+            largeTouch && styles.navLabelLargeTouch,
+          ]}
+        >
+          {topic.navLabel}
+        </Text>
       </View>
       <Text
         adjustsFontSizeToFit
@@ -55,6 +70,7 @@ export function TopicPanel({
           styles.title,
           isConsole && styles.titleConsole,
           isCompactConsole && styles.titleConsoleCompact,
+          largeTouch && styles.titleLargeTouch,
         ]}
       >
         {topic.title}
@@ -64,6 +80,7 @@ export function TopicPanel({
         style={[
           isConsole ? styles.consoleBody : styles.standardBody,
           isCompactConsole && styles.consoleBodyCompact,
+          largeTouch && styles.standardBodyLargeTouch,
         ]}
       >
         <View
@@ -73,6 +90,7 @@ export function TopicPanel({
           ]}
         >
           <MediaViewer
+            largeTouch={largeTouch}
             media={topic.media}
             variant={
               isCompactConsole
@@ -88,6 +106,7 @@ export function TopicPanel({
           style={[
             isConsole ? styles.consoleCopy : styles.standardCopy,
             isCompactConsole && styles.consoleCopyCompact,
+            largeTouch && styles.standardCopyLargeTouch,
           ]}
         >
           <Text
@@ -95,6 +114,7 @@ export function TopicPanel({
               styles.summary,
               isConsole && styles.summaryConsole,
               isCompactConsole && styles.summaryConsoleCompact,
+              largeTouch && styles.summaryLargeTouch,
             ]}
           >
             {topic.summary}
@@ -105,15 +125,17 @@ export function TopicPanel({
               styles.noteGrid,
               isConsole && styles.noteGridConsole,
               isCompactConsole && styles.noteGridConsoleCompact,
+              largeTouch && styles.noteGridLargeTouch,
             ]}
           >
             <InfoBlock
               compact={isCompactConsole}
               console={isConsole}
+              largeTouch={largeTouch}
               icon={
                 <ShieldCheck
                   color={colors.success}
-                  size={isConsole ? 20 : 18}
+                  size={largeTouch ? 22 : isConsole ? 20 : 18}
                   strokeWidth={2.4}
                 />
               }
@@ -124,10 +146,11 @@ export function TopicPanel({
             <InfoBlock
               compact={isCompactConsole}
               console={isConsole}
+              largeTouch={largeTouch}
               icon={
                 <Gauge
                   color={colors.amber}
-                  size={isConsole ? 20 : 18}
+                  size={largeTouch ? 22 : isConsole ? 20 : 18}
                   strokeWidth={2.4}
                 />
               }
@@ -147,27 +170,49 @@ type InfoBlockProps = {
   console: boolean;
   icon: ReactNode;
   label: string;
+  largeTouch?: boolean;
   text: string;
   tone: "blue" | "amber";
 };
 
-function InfoBlock({ compact, console, icon, label, text, tone }: InfoBlockProps) {
+function InfoBlock({
+  compact,
+  console,
+  icon,
+  label,
+  largeTouch = false,
+  text,
+  tone,
+}: InfoBlockProps) {
   return (
     <View
       style={[
         styles.infoBlock,
         console && styles.infoBlockConsole,
         compact && styles.infoBlockConsoleCompact,
+        largeTouch && styles.infoBlockLargeTouch,
         tone === "blue" ? styles.infoBlockBlue : styles.infoBlockAmber,
       ]}
     >
       <View style={[styles.infoHeader, compact && styles.infoHeaderCompact]}>
         {icon}
-        <Text style={[styles.infoLabel, compact && styles.infoLabelCompact]}>
+        <Text
+          style={[
+            styles.infoLabel,
+            compact && styles.infoLabelCompact,
+            largeTouch && styles.infoLabelLargeTouch,
+          ]}
+        >
           {label}
         </Text>
       </View>
-      <Text style={[styles.infoText, compact && styles.infoTextCompact]}>
+      <Text
+        style={[
+          styles.infoText,
+          compact && styles.infoTextCompact,
+          largeTouch && styles.infoTextLargeTouch,
+        ]}
+      >
         {text}
       </Text>
     </View>
@@ -182,6 +227,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
+  },
+  panelLargeTouch: {
+    gap: spacing.lg,
+    padding: spacing.xl,
+    borderRadius: radii.xl,
   },
   panelConsole: {
     gap: spacing.lg,
@@ -205,6 +255,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     textTransform: "uppercase",
   },
+  moduleLabelLargeTouch: {
+    fontSize: 15,
+  },
   navLabel: {
     flexShrink: 1,
     color: colors.textSubtle,
@@ -213,11 +266,17 @@ const styles = StyleSheet.create({
     textAlign: "right",
     textTransform: "uppercase",
   },
+  navLabelLargeTouch: {
+    fontSize: 15,
+  },
   title: {
     color: colors.text,
     fontSize: 28,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  titleLargeTouch: {
+    fontSize: 34,
   },
   titleConsole: {
     fontSize: 30,
@@ -228,8 +287,14 @@ const styles = StyleSheet.create({
   standardBody: {
     gap: spacing.md,
   },
+  standardBodyLargeTouch: {
+    gap: spacing.lg,
+  },
   standardCopy: {
     gap: spacing.md,
+  },
+  standardCopyLargeTouch: {
+    gap: spacing.lg,
   },
   consoleBody: {
     flex: 1,
@@ -267,6 +332,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
+  summaryLargeTouch: {
+    fontSize: 19,
+    lineHeight: 28,
+  },
   summaryConsole: {
     fontSize: 18,
     lineHeight: 26,
@@ -277,6 +346,9 @@ const styles = StyleSheet.create({
   },
   noteGrid: {
     gap: spacing.md,
+  },
+  noteGridLargeTouch: {
+    gap: spacing.lg,
   },
   noteGridConsole: {
     flexDirection: "row",
@@ -291,6 +363,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 1,
     borderRadius: radii.md,
+  },
+  infoBlockLargeTouch: {
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radii.xl,
   },
   infoBlockConsole: {
     flex: 1,
@@ -322,6 +399,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textTransform: "uppercase",
   },
+  infoLabelLargeTouch: {
+    fontSize: 16,
+  },
   infoLabelCompact: {
     fontSize: 11,
   },
@@ -329,6 +409,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     lineHeight: 20,
+  },
+  infoTextLargeTouch: {
+    fontSize: 17,
+    lineHeight: 24,
   },
   infoTextCompact: {
     fontSize: 12,

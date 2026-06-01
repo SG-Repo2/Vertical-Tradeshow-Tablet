@@ -7,13 +7,25 @@ import type { PumpTopic } from "../data/topics";
 import { colors, radii, spacing } from "../theme/colors";
 
 type MediaViewerProps = {
+  largeTouch?: boolean;
   media: PumpTopic["media"];
   variant?: "standard" | "console" | "consoleCompact";
 };
 
-export function MediaViewer({ media, variant = "standard" }: MediaViewerProps) {
+export function MediaViewer({
+  largeTouch = false,
+  media,
+  variant = "standard",
+}: MediaViewerProps) {
   if (media.type === "video") {
-    return <VideoMedia key={media.alt} media={media} variant={variant} />;
+    return (
+      <VideoMedia
+        key={media.alt}
+        largeTouch={largeTouch}
+        media={media}
+        variant={variant}
+      />
+    );
   }
 
   return (
@@ -24,6 +36,7 @@ export function MediaViewer({ media, variant = "standard" }: MediaViewerProps) {
         styles.mediaFrame,
         variant === "console" && styles.mediaFrameConsole,
         variant === "consoleCompact" && styles.mediaFrameConsoleCompact,
+        largeTouch && styles.mediaFrameLargeTouch,
       ]}
     >
       <Image
@@ -35,7 +48,11 @@ export function MediaViewer({ media, variant = "standard" }: MediaViewerProps) {
   );
 }
 
-function VideoMedia({ media, variant = "standard" }: MediaViewerProps) {
+function VideoMedia({
+  largeTouch = false,
+  media,
+  variant = "standard",
+}: MediaViewerProps) {
   const videoSource = useMemo(() => {
     const asset = Asset.fromModule(media.source);
 
@@ -54,6 +71,7 @@ function VideoMedia({ media, variant = "standard" }: MediaViewerProps) {
         styles.mediaFrame,
         variant === "console" && styles.mediaFrameConsole,
         variant === "consoleCompact" && styles.mediaFrameConsoleCompact,
+        largeTouch && styles.mediaFrameLargeTouch,
       ]}
     >
       <VideoView
@@ -67,6 +85,7 @@ function VideoMedia({ media, variant = "standard" }: MediaViewerProps) {
         style={[
           styles.videoLabel,
           variant === "consoleCompact" && styles.videoLabelCompact,
+          largeTouch && styles.videoLabelLargeTouch,
         ]}
       >
         Inline MP4 reference
@@ -85,6 +104,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceMuted,
+  },
+  mediaFrameLargeTouch: {
+    borderRadius: radii.xl,
   },
   mediaFrameConsole: {
     aspectRatio: 1.42,
@@ -118,5 +140,10 @@ const styles = StyleSheet.create({
     left: spacing.sm,
     bottom: spacing.xs,
     fontSize: 10,
+  },
+  videoLabelLargeTouch: {
+    fontSize: 13,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
 });
