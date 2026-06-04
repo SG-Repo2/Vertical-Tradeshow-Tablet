@@ -1,5 +1,6 @@
-import { Gauge, ShieldCheck } from "lucide-react-native";
+import { Gauge, ShieldCheck, X } from "lucide-react-native";
 import {
+  Pressable,
   StyleProp,
   StyleSheet,
   Text,
@@ -16,52 +17,110 @@ type TopicPanelProps = {
   compact?: boolean;
   currentIndex: number;
   largeTouch?: boolean;
+  onClose?: () => void;
+  onMediaPress?: () => void;
   style?: StyleProp<ViewStyle>;
   topic: PumpTopic;
   totalTopics: number;
-  variant?: "standard" | "console";
+  variant?: "standard" | "console" | "modal";
 };
 
 export function TopicPanel({
   compact = false,
   currentIndex,
   largeTouch = false,
+  onClose,
+  onMediaPress,
   style,
   topic,
   totalTopics,
   variant = "standard",
 }: TopicPanelProps) {
   const isConsole = variant === "console";
+  const isModal = variant === "modal";
+  const isModalWide = isModal && !compact;
   const isCompactConsole = isConsole && compact;
+  const usesInlineInfoBlocks = isConsole || isModalWide;
+  const mediaVariant = isCompactConsole
+    ? "consoleCompact"
+    : isConsole || isModalWide
+      ? "console"
+      : "standard";
 
   return (
     <View
       style={[
         styles.panel,
         isConsole && styles.panelConsole,
+        isModal && styles.panelModal,
         isCompactConsole && styles.panelConsoleCompact,
+        isModal && compact && styles.panelModalCompact,
         largeTouch && styles.panelLargeTouch,
         style,
       ]}
     >
-      <View style={styles.kickerRow}>
-        <Text
-          style={[
-            styles.moduleLabel,
-            largeTouch && styles.moduleLabelLargeTouch,
-          ]}
-        >
-          Module {String(currentIndex + 1).padStart(2, "0")} / {totalTopics}
-        </Text>
-        <Text
-          style={[
-            styles.navLabel,
-            largeTouch && styles.navLabelLargeTouch,
-          ]}
-        >
-          {topic.navLabel}
-        </Text>
-      </View>
+      {isModal ? (
+        onClose ? (
+          <Pressable
+            accessibilityLabel="Close module"
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.closeButton,
+              styles.closeButtonFloating,
+              largeTouch && styles.closeButtonLargeTouch,
+              pressed && styles.closeButtonPressed,
+            ]}
+          >
+            <X
+              color={colors.pumpBlueDark}
+              size={largeTouch ? 24 : 20}
+              strokeWidth={3}
+            />
+          </Pressable>
+        ) : null
+      ) : (
+        <View style={styles.kickerRow}>
+          <Text
+            style={[
+              styles.moduleLabel,
+              largeTouch && styles.moduleLabelLargeTouch,
+            ]}
+          >
+            Module {String(currentIndex + 1).padStart(2, "0")} / {totalTopics}
+          </Text>
+          <View style={styles.kickerRight}>
+            <Text
+              style={[
+                styles.navLabel,
+                largeTouch && styles.navLabelLargeTouch,
+              ]}
+            >
+              {topic.navLabel}
+            </Text>
+            {onClose ? (
+              <Pressable
+                accessibilityLabel="Close module"
+                accessibilityRole="button"
+                hitSlop={10}
+                onPress={onClose}
+                style={({ pressed }) => [
+                  styles.closeButton,
+                  largeTouch && styles.closeButtonLargeTouch,
+                  pressed && styles.closeButtonPressed,
+                ]}
+              >
+                <X
+                  color={colors.pumpBlueDark}
+                  size={largeTouch ? 24 : 20}
+                  strokeWidth={3}
+                />
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      )}
       <Text
         adjustsFontSizeToFit
         minimumFontScale={0.86}
@@ -69,7 +128,9 @@ export function TopicPanel({
         style={[
           styles.title,
           isConsole && styles.titleConsole,
+          isModal && styles.titleModal,
           isCompactConsole && styles.titleConsoleCompact,
+          isModal && compact && styles.titleModalCompact,
           largeTouch && styles.titleLargeTouch,
         ]}
       >
@@ -79,6 +140,7 @@ export function TopicPanel({
       <View
         style={[
           isConsole ? styles.consoleBody : styles.standardBody,
+          isModalWide && styles.modalBody,
           isCompactConsole && styles.consoleBodyCompact,
           largeTouch && styles.standardBodyLargeTouch,
         ]}
@@ -86,25 +148,26 @@ export function TopicPanel({
         <View
           style={[
             isConsole ? styles.consoleMedia : undefined,
+            isModalWide && styles.modalMedia,
             isCompactConsole && styles.consoleMediaCompact,
           ]}
         >
           <MediaViewer
             largeTouch={largeTouch}
             media={topic.media}
-            variant={
-              isCompactConsole
-                ? "consoleCompact"
-                : isConsole
-                  ? "console"
-                  : "standard"
+            onPress={
+              isModal && topic.media.type === "image"
+                ? onMediaPress
+                : undefined
             }
+            variant={mediaVariant}
           />
         </View>
 
         <View
           style={[
             isConsole ? styles.consoleCopy : styles.standardCopy,
+            isModalWide && styles.modalCopy,
             isCompactConsole && styles.consoleCopyCompact,
             largeTouch && styles.standardCopyLargeTouch,
           ]}
@@ -113,6 +176,7 @@ export function TopicPanel({
             style={[
               styles.summary,
               isConsole && styles.summaryConsole,
+              isModal && styles.summaryModal,
               isCompactConsole && styles.summaryConsoleCompact,
               largeTouch && styles.summaryLargeTouch,
             ]}
@@ -124,18 +188,19 @@ export function TopicPanel({
             style={[
               styles.noteGrid,
               isConsole && styles.noteGridConsole,
+              isModalWide && styles.noteGridModal,
               isCompactConsole && styles.noteGridConsoleCompact,
               largeTouch && styles.noteGridLargeTouch,
             ]}
           >
             <InfoBlock
               compact={isCompactConsole}
-              console={isConsole}
+              console={usesInlineInfoBlocks}
               largeTouch={largeTouch}
               icon={
                 <ShieldCheck
                   color={colors.surface}
-                  size={largeTouch ? 22 : isConsole ? 20 : 18}
+                  size={largeTouch ? 22 : usesInlineInfoBlocks ? 20 : 18}
                   strokeWidth={2.4}
                 />
               }
@@ -145,12 +210,12 @@ export function TopicPanel({
             />
             <InfoBlock
               compact={isCompactConsole}
-              console={isConsole}
+              console={usesInlineInfoBlocks}
               largeTouch={largeTouch}
               icon={
                 <Gauge
                   color={colors.pumpBlueDark}
-                  size={largeTouch ? 22 : isConsole ? 20 : 18}
+                  size={largeTouch ? 22 : usesInlineInfoBlocks ? 20 : 18}
                   strokeWidth={2.4}
                 />
               }
@@ -223,6 +288,7 @@ function InfoBlock({
 
 const styles = StyleSheet.create({
   panel: {
+    position: "relative",
     gap: spacing.md,
     padding: spacing.lg,
     borderWidth: 2,
@@ -244,15 +310,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
   },
+  panelModal: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
   panelConsoleCompact: {
     gap: spacing.sm,
     padding: spacing.md,
+  },
+  panelModalCompact: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   kickerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+  },
+  kickerRight: {
+    flexShrink: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: spacing.sm,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceMuted,
+  },
+  closeButtonLargeTouch: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  closeButtonFloating: {
+    position: "absolute",
+    top: spacing.md,
+    right: spacing.md,
+    zIndex: 2,
+  },
+  closeButtonPressed: {
+    opacity: 0.76,
   },
   moduleLabel: {
     color: colors.pumpBlue,
@@ -290,8 +399,18 @@ const styles = StyleSheet.create({
   titleConsole: {
     fontSize: 30,
   },
+  titleModal: {
+    paddingRight: 44,
+    fontWeight: "900",
+    textAlign: "left",
+    top: 0,
+  },
   titleConsoleCompact: {
     fontSize: 24,
+  },
+  titleModalCompact: {
+    fontSize: 24,
+    paddingRight: 40,
   },
   standardBody: {
     gap: spacing.md,
@@ -315,6 +434,11 @@ const styles = StyleSheet.create({
   consoleBodyCompact: {
     gap: spacing.md,
   },
+  modalBody: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.lg,
+  },
   consoleMedia: {
     width: "38%",
     minWidth: 300,
@@ -327,11 +451,23 @@ const styles = StyleSheet.create({
     minWidth: 220,
     maxWidth: 300,
   },
+  modalMedia: {
+    width: "38%",
+    minWidth: 260,
+    maxWidth: 360,
+    alignSelf: "flex-start",
+    justifyContent: "center",
+  },
   consoleCopy: {
     flex: 1,
     minWidth: 0,
     justifyContent: "flex-start",
     gap: spacing.lg,
+  },
+  modalCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.md,
   },
   consoleCopyCompact: {
     gap: spacing.sm,
@@ -349,6 +485,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 26,
   },
+  summaryModal: {
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 23,
+  },
   summaryConsoleCompact: {
     fontSize: 15,
     lineHeight: 21,
@@ -360,6 +501,11 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   noteGridConsole: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.md,
+  },
+  noteGridModal: {
     flexDirection: "row",
     alignItems: "stretch",
     gap: spacing.md,

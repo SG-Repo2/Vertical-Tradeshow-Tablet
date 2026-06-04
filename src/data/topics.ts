@@ -39,13 +39,13 @@ export const pumpTopics: PumpTopic[] = [
     summary:
       "Performing pump-to-motor shaft alignment is essential for maintaining critical clearances that support rotor stiffness and damping.",
     whyItMatters:
-      "Reliable alignment reduces vibration energy before it is carried into the lineshaft, bearings, and bowl assembly.",
+      "When the rotor is misaligned, likelihood of contact with the stationary elements due to offset or vibration is greatly increased. For angular alignment in particular, small offsets at the driver result in large offsets at the hydraulic assembly.",
     fieldCheck:
-      "Verify soft foot, coupling runout, motor register fit, and shaft concentricity before final coupling assembly.",
+      "Always perform both angular and parallel alignment upon reassembly, require mechanical inspection of the driver during refurbishment, and machine “truth bands” on stuffing box or discharge head surfaces aids in alignment processes.",
   },
   {
     id: "packing-best-practice",
-    title: "Packing Best Practice",
+    title: "Packing Best Practices",
     navLabel: "Packing",
     media: {
       type: "image",
@@ -58,11 +58,11 @@ export const pumpTopics: PumpTopic[] = [
       label: "Packing gland area",
     },
     summary:
-      "Packing must be installed in the correct orientation with staggered joints and a controlled leakage path. The goal is sealing with lubrication, not a dry, overheated stuffing box.",
+      "For pumps using packing, it’s important to use best practices when cutting and installing packing to reduce excessive leakage. Packing should be cut on a mandrel at an angle and installed with packing seams clocked 90 degrees. Hardening the shaft sleeve that runs under the packing can reduce the rate of wear, extending the life of the sleeve and reducing the need for maintenance.",
     whyItMatters:
-      "Improper packing increases sleeve wear, heat, leakage instability, and maintenance frequency.",
+      "Packing that is installed incorrectly can result in a leak path or excessive heat generation, which affects the reliability of the sealing device. Excessive leakage not only reduces efficiency, it can be a safety hazard.",
     fieldCheck:
-      "Confirm ring orientation, lantern ring position, gland adjustment, and a controlled leakage rate after startup.",
+      "Confirm ring orientation and leakage rate after final gland tightening. Packing needs some leakage to lubricate the packing and dissipate heat. The packing gland should be tightened during service as leakage increases to maintain the design leakage rate.",
   },
   {
     id: "resonance",

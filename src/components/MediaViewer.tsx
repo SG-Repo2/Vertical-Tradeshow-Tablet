@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Asset } from "expo-asset";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { VideoView, useVideoPlayer } from "expo-video";
 
 import type { PumpTopic } from "../data/topics";
@@ -9,12 +9,14 @@ import { colors, radii, spacing } from "../theme/colors";
 type MediaViewerProps = {
   largeTouch?: boolean;
   media: PumpTopic["media"];
+  onPress?: () => void;
   variant?: "standard" | "console" | "consoleCompact";
 };
 
 export function MediaViewer({
   largeTouch = false,
   media,
+  onPress,
   variant = "standard",
 }: MediaViewerProps) {
   if (media.type === "video") {
@@ -28,7 +30,7 @@ export function MediaViewer({
     );
   }
 
-  return (
+  const frame = (
     <View
       accessibilityLabel={media.alt}
       accessibilityRole="image"
@@ -46,6 +48,21 @@ export function MediaViewer({
       />
     </View>
   );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityLabel={`Expand ${media.alt}`}
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => pressed && styles.mediaPressablePressed}
+      >
+        {frame}
+      </Pressable>
+    );
+  }
+
+  return frame;
 }
 
 function VideoMedia({
@@ -117,6 +134,9 @@ const styles = StyleSheet.create({
   },
   mediaFrameConsoleCompact: {
     aspectRatio: 1.72,
+  },
+  mediaPressablePressed: {
+    opacity: 0.82,
   },
   image: {
     width: "100%",
