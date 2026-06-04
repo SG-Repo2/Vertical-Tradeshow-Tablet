@@ -13,6 +13,12 @@ export type PumpTopic = {
     x: number;
     y: number;
     label: string;
+    /**
+     * Short, 1–2 word display label for the interactive diagram callout pills.
+     * Falls back to `label` when omitted. Kept separate from `label` (used in
+     * the detail modal/content) so the pills stay compact and never truncate.
+     */
+    shortLabel?: string;
   };
   summary: string;
   whyItMatters: string;
@@ -35,6 +41,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 50,
       y: 12,
       label: "Motor and shaft alignment",
+      shortLabel: "Motor Alignment",
     },
     summary:
       "Performing pump-to-motor shaft alignment is essential for maintaining critical clearances that support rotor stiffness and damping.",
@@ -56,6 +63,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 47,
       y: 23,
       label: "Packing gland area",
+      shortLabel: "Packing Gland",
     },
     summary:
       "For pumps using packing, it’s important to use best practices when cutting and installing packing to reduce excessive leakage. Packing should be cut on a mandrel at an angle and installed with packing seams clocked 90 degrees. Hardening the shaft sleeve that runs under the packing can reduce the rate of wear, extending the life of the sleeve and reducing the need for maintenance.",
@@ -77,6 +85,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 56,
       y: 36,
       label: "Column vibration response",
+      shortLabel: "Column Vibration",
     },
     summary:
       "Long vertical assemblies can amplify vibration when a natural frequency aligns with running speed, vane pass, or another operating excitation. The resulting mode shape can accelerate bearing wear and structural fatigue.",
@@ -98,6 +107,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 48,
       y: 47,
       label: "Lineshaft coupling joint",
+      shortLabel: "Lineshaft Coupling",
     },
     summary:
       "Threaded, sleeve-and-keyed, and split-clamp couplings each affect alignment, torque transfer, and service access differently. Coupling selection and assembly quality influence how shaft errors stack through the pump column.",
@@ -119,6 +129,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 53,
       y: 58,
       label: "Intermediate spider support",
+      shortLabel: "Spider Support",
     },
     summary:
       "Spiders and intermediate bearings support the lineshaft between column sections. Floating or poorly constrained components allow radial movement that reduces shaft stability.",
@@ -140,6 +151,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 46,
       y: 68,
       label: "Register and centerline control",
+      shortLabel: "Register Control",
     },
     summary:
       "Male and female registers control column alignment and help keep the rotating assembly centered. For critical fits, acceptance targets such as <= 0.002\" T.I.R. help limit accumulated offset.",
@@ -161,6 +173,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 53,
       y: 78,
       label: "Impeller retention interface",
+      shortLabel: "Impeller Lock",
     },
     summary:
       "The lock collar, cap screw, pump shaft, and impeller interface secure axial position inside the bowl assembly. Loosening, poor seating, or incorrect assembly can shift the impeller and change hydraulic performance.",
@@ -182,6 +195,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 50,
       y: 88,
       label: "Suction umbrella geometry",
+      shortLabel: "Suction Umbrella",
     },
     summary:
       "Submergence, suction umbrella spacing, and inlet geometry shape the flow entering the bowl. Poor inlet conditions can create vortexing, air entrainment, and unstable hydraulic loading.",
@@ -203,6 +217,7 @@ export const pumpTopics: PumpTopic[] = [
       x: 57,
       y: 94,
       label: "Intake velocity control",
+      shortLabel: "Intake Velocity",
     },
     summary:
       "Reducing excessive intake velocity improves approach flow and lowers losses before the water reaches the impeller. Lower velocity also supports more uniform loading across the suction bell.",

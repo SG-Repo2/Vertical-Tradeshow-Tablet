@@ -1,20 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text } from "react-native";
 
 import { colors } from "../theme/colors";
-
-export type HotspotLabelPosition = {
-  left: number;
-  top: number;
-  width: number;
-};
 
 type HotspotProps = {
   active: boolean;
   accessibilityLabel: string;
   index: number;
-  label: string;
-  labelPosition: HotspotLabelPosition;
   size?: number;
   x: number;
   y: number;
@@ -25,106 +17,79 @@ export function Hotspot({
   active,
   accessibilityLabel,
   index,
-  label,
-  labelPosition,
-  size = 52,
+  size = 64,
   x,
   y,
   onPress,
 }: HotspotProps) {
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const scale = useRef(new Animated.Value(active ? 1.04 : 1)).current;
-  const fontSize = size >= 58 ? 22 : 18;
-  const labelFontSize = size >= 80 ? 14 : size >= 58 ? 12 : 11;
-  const labelLineHeight = Math.round(labelFontSize * 1.18);
-  const hitSlop = Math.max(0, (44 - size) / 2);
+  const scale = useRef(new Animated.Value(active ? 1.15 : 1)).current;
+  // Number scales with the circle so it stays proportionate across layouts.
+  const fontSize = Math.max(20, Math.round(size * 0.36));
+  // Keep a comfortable touch target even when the visual circle is on the
+  // smaller end of the responsive band.
+  const hitSlop = Math.max(0, Math.round((72 - size) / 2));
 
   useEffect(() => {
     Animated.spring(scale, {
       friction: 8,
       tension: 170,
-      toValue: active ? 1.08 : hovered || focused ? 1.06 : 1,
+      toValue: active ? 1.15 : hovered || focused ? 1.08 : 1,
       useNativeDriver: true,
     }).start();
   }, [active, focused, hovered, scale]);
 
   return (
-    <>
-      <View
-        pointerEvents="none"
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      hitSlop={hitSlop}
+      onBlur={() => setFocused(false)}
+      onFocus={() => setFocused(true)}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.hotspot,
+        {
+          borderRadius: size / 2,
+          height: size,
+          left: x - size / 2,
+          top: y - size / 2,
+          width: size,
+        },
+        active && styles.hotspotActive,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Animated.View
         style={[
-          styles.labelWrap,
-          active && styles.labelWrapActive,
+          styles.markerCircle,
           {
-            left: labelPosition.left,
-            top: labelPosition.top,
-            width: labelPosition.width,
+            borderRadius: size / 2,
+            height: size,
+            transform: [{ scale }],
+            width: size,
           },
+          active ? styles.markerCircleActive : styles.markerCircleInactive,
         ]}
       >
         <Text
           style={[
-            styles.markerLabel,
+            styles.markerText,
             {
-              fontSize: labelFontSize,
-              lineHeight: labelLineHeight,
+              color: active ? colors.surface : colors.pumpBlueDark,
+              fontSize,
+              lineHeight: Math.round(fontSize * 1.1),
             },
           ]}
         >
-          {label}
+          {index}
         </Text>
-      </View>
-      <Pressable
-        accessibilityLabel={accessibilityLabel}
-        accessibilityRole="button"
-        accessibilityState={{ selected: active }}
-        hitSlop={hitSlop}
-        onBlur={() => setFocused(false)}
-        onFocus={() => setFocused(true)}
-        onHoverIn={() => setHovered(true)}
-        onHoverOut={() => setHovered(false)}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.hotspot,
-          {
-            borderRadius: size / 2,
-            height: size,
-            left: x - size / 2,
-            top: y - size / 2,
-            width: size,
-          },
-          active && styles.hotspotActive,
-          pressed && styles.pressed,
-        ]}
-      >
-        <Animated.View
-          style={[
-            styles.markerCircle,
-            {
-              borderRadius: size / 2,
-              height: size,
-              transform: [{ scale }],
-              width: size,
-            },
-            active ? styles.markerCircleActive : styles.markerCircleInactive,
-          ]}
-        >
-          <Text
-            style={[
-              styles.markerText,
-              {
-                color: active ? colors.surface : colors.pumpBlueDark,
-                fontSize,
-                lineHeight: Math.round(fontSize * 1.1),
-              },
-            ]}
-          >
-            {index}
-          </Text>
-        </Animated.View>
-      </Pressable>
-    </>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -145,53 +110,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
+  // Inactive: white chip with a heavy navy ring and navy number.
   markerCircleInactive: {
-    borderWidth: 3,
-    borderColor: colors.pumpBlue,
-    backgroundColor: colors.surface,
+    borderWidth: 4,
+    borderColor: colors.pumpBlueDark,
+    backgroundColor: "rgba(255, 255, 255, 0.98)",
   },
+  // Active: solid blue disc with a white number and a blue glow.
   markerCircleActive: {
-    borderWidth: 3,
-    borderColor: colors.gold,
-    backgroundColor: colors.pumpBlueDark,
+    borderWidth: 4,
+    borderColor: colors.pumpBlueDark,
+    backgroundColor: colors.pumpBlue,
+    shadowColor: colors.pumpBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 18,
+    elevation: 14,
   },
   markerText: {
-    fontWeight: "900",
+    fontWeight: "700",
     textAlign: "center",
-    includeFontPadding: false,
-  },
-  labelWrap: {
-    position: "absolute",
-    zIndex: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "rgba(25, 70, 142, 0.28)",
-    borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.92)",
-    color: colors.pumpBlueDark,
-    fontWeight: "900",
-    textAlign: "center",
-    textTransform: "uppercase",
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-  },
-  labelWrapActive: {
-    zIndex: 20,
-    borderColor: colors.gold,
-    backgroundColor: "rgba(255, 255, 255, 0.97)",
-  },
-  markerLabel: {
-    color: colors.pumpBlueDark,
-    fontWeight: "900",
-    textAlign: "center",
-    textTransform: "uppercase",
     includeFontPadding: false,
   },
 });
