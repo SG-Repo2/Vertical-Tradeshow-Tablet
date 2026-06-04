@@ -2,7 +2,7 @@ import { Animated, Image, StyleSheet, Text, View } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Svg, { Line } from "react-native-svg";
 
-import { Hotspot } from "./Hotspot";
+import { Hotspot, type HotspotLabelPosition } from "./Hotspot";
 import {
   pumpCrossSection,
   type PumpTopic,
@@ -28,24 +28,30 @@ type Point = {
   y: number;
 };
 
+type HotspotLabelLayout = Point & {
+  width?: number;
+};
+
 const PUMP_ASPECT_RATIO = 16 / 9;
 const STANDARD_IMAGE_ZOOM = 1.12;
 const KIOSK_DEFAULT_ZOOM = 2.05;
 const KIOSK_IMAGE_OFFSET_Y = 36;
+const DIAGRAM_TITLE = "VS1 Vertical Pump Anatomy";
+const LABEL_EDGE_INSET = 14;
 const oceanWaveBackground = require("../../assets/vertical/hydro-ocean-wave-background.gif");
 const HOTSPOT_MARKER_POSITIONS: Record<string, Point> = {
   // Markers sit outboard of the pump body; their y is aligned to each
   // component's real location (topic.hotspot) so the dotted connector line
   // lands on the feature it points at rather than following a mechanical zigzag.
-  "pump-motor-alignment": { x: 35, y: 12 },
-  "packing-best-practice": { x: 37, y: 23 },
-  resonance: { x: 67, y: 30 },
-  "lineshaft-coupling": { x: 35, y: 53 },
-  "floating-spiders": { x: 66, y: 64 },
-  "stringent-tolerances": { x: 38, y: 74 },
-  "impeller-lock-collar": { x: 67, y: 80 },
-  "submerged-suction-umbrella": { x: 35, y: 88 },
-  "reduce-velocity": { x: 66, y: 94 },
+  "pump-motor-alignment": { x: 34, y: 13 },
+  "packing-best-practice": { x: 35, y: 30 },
+  resonance: { x: 66, y: 31 },
+  "lineshaft-coupling": { x: 34, y: 51 },
+  "floating-spiders": { x: 66, y: 62 },
+  "stringent-tolerances": { x: 35, y: 72 },
+  "impeller-lock-collar": { x: 66, y: 80 },
+  "submerged-suction-umbrella": { x: 34, y: 90 },
+  "reduce-velocity": { x: 66, y: 93 },
 };
 
 // Where each leader line terminates on the cross-section — the real component
@@ -59,6 +65,22 @@ const HOTSPOT_COMPONENT_ANCHORS: Record<string, Point> = {
   "impeller-lock-collar": { x: 50, y: 84 },
   "reduce-velocity": { x: 51, y: 95 },
 };
+
+const HOTSPOT_LABEL_LAYOUTS: Record<string, HotspotLabelLayout> = {
+  "pump-motor-alignment": { x: 30, y: 20, width: 210 },
+  "packing-best-practice": { x: 30, y: 37, width: 210 },
+  resonance: { x: 77, y: 39, width: 214 },
+  "lineshaft-coupling": { x: 30, y: 58, width: 210 },
+  "floating-spiders": { x: 77, y: 69, width: 214 },
+  "stringent-tolerances": { x: 30, y: 75, width: 210 },
+  "impeller-lock-collar": { x: 77, y: 83, width: 214 },
+  "submerged-suction-umbrella": { x: 30, y: 94, width: 210 },
+  "reduce-velocity": { x: 77, y: 96, width: 214 },
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 export function PumpCanvas({
   activeTopic,
@@ -185,12 +207,55 @@ export function PumpCanvas({
 
   const stageHotspotPoints = useMemo(
     () =>
-      hotspotPoints.map(({ point, anchor, topic }) => ({
-        point: toStagePoint(point),
-        anchor: toStagePoint(anchor),
-        topic,
-      })),
-    [hotspotPoints, toStagePoint],
+      hotspotPoints.map(({ point, anchor, topic }) => {
+        const labelLayout =
+          HOTSPOT_LABEL_LAYOUTS[topic.id] ??
+          HOTSPOT_MARKER_POSITIONS[topic.id] ??
+          topic.hotspot;
+        const labelStagePoint = toStagePoint({
+          x: (labelLayout.x / 100) * imageRect.width,
+          y: (labelLayout.y / 100) * imageRect.height,
+        });
+        const labelWidth =
+          labelLayout.width ?? (variant === "kiosk" ? 210 : 180);
+        const labelHeightEstimate = variant === "kiosk" ? 64 : 54;
+        const minLabelTop = variant === "kiosk" ? 112 : 88;
+        const labelPosition: HotspotLabelPosition = {
+          left: clamp(
+            labelStagePoint.x - labelWidth / 2,
+            LABEL_EDGE_INSET,
+            Math.max(
+              LABEL_EDGE_INSET,
+              stageSize.width - labelWidth - LABEL_EDGE_INSET,
+            ),
+          ),
+          top: clamp(
+            labelStagePoint.y,
+            minLabelTop,
+            Math.max(
+              minLabelTop,
+              stageSize.height - labelHeightEstimate - LABEL_EDGE_INSET,
+            ),
+          ),
+          width: labelWidth,
+        };
+
+        return {
+          point: toStagePoint(point),
+          anchor: toStagePoint(anchor),
+          labelPosition,
+          topic,
+        };
+      }),
+    [
+      hotspotPoints,
+      imageRect.height,
+      imageRect.width,
+      stageSize.height,
+      stageSize.width,
+      toStagePoint,
+      variant,
+    ],
   );
 
   const activeHotspot =
@@ -289,8 +354,8 @@ export function PumpCanvas({
               })}
             </Svg>
 
-            {/* Permanent diagram header — title stays top-left and wraps. It is
-                not anchored to any hotspot and shows no floating callouts. */}
+            {/* Permanent diagram header — the per-topic labels live beneath
+                the numbered hotspots so the title can describe the full view. */}
             <View
               pointerEvents="none"
               style={[
@@ -306,7 +371,7 @@ export function PumpCanvas({
                   largeTouch && styles.diagramTitleTextLargeTouch,
                 ]}
               >
-                {activeTopic.hotspot.label}
+                {DIAGRAM_TITLE}
               </Text>
             </View>
 
@@ -325,12 +390,14 @@ export function PumpCanvas({
                 },
               ]}
             />
-            {stageHotspotPoints.map(({ point, topic }, index) => (
+            {stageHotspotPoints.map(({ point, labelPosition, topic }, index) => (
               <Hotspot
                 accessibilityLabel={`Show ${topic.title}`}
                 active={topic.id === activeTopic.id}
                 index={index + 1}
                 key={topic.id}
+                label={topic.hotspot.label}
+                labelPosition={labelPosition}
                 onPress={() => onSelectTopic(topic.id)}
                 size={hotspotTouchSize}
                 x={point.x}

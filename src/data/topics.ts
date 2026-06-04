@@ -62,11 +62,11 @@ export const pumpTopics: PumpTopic[] = [
     whyItMatters:
       "Packing that is installed incorrectly can result in a leak path or excessive heat generation, which affects the reliability of the sealing device. Excessive leakage not only reduces efficiency, it can be a safety hazard.",
     fieldCheck:
-      "Confirm ring orientation and leakage rate after final gland tightening. Packing needs some leakage to lubricate the packing and dissipate heat. The packing gland should be tightened during service as leakage increases to maintain the design leakage rate.",
+      "Confirm ring orientation and leakage rate after final gland tightening. Packing needs some leakage to lubricate the packing and dissipate heat. The packing gland should be tightened during service as leakage increases to maintain the design leakage rate. ",
   },
   {
     id: "resonance",
-    title: "Resonance",
+    title: "Resonance & Modal Analysis",
     navLabel: "Resonance",
     media: {
       type: "image",
