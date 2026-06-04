@@ -24,7 +24,7 @@ export const pumpCrossSection = require("../../assets/vertical/VS1_CrossSection_
 export const pumpTopics: PumpTopic[] = [
   {
     id: "pump-motor-alignment",
-    title: "Pump/Motor Alignment",
+    title: "Pump-to-Motor Alignment",
     navLabel: "Alignment",
     media: {
       type: "video",
@@ -37,7 +37,7 @@ export const pumpTopics: PumpTopic[] = [
       label: "Motor and shaft alignment",
     },
     summary:
-      "Motor, coupling, shaft, and pump column alignment set the baseline for the entire rotating assembly. Small offsets at the driver can amplify vibration, coupling load, and bearing wear through the column.",
+      "Performing pump-to-motor shaft alignment is essential for maintaining critical clearances that support rotor stiffness and damping.",
     whyItMatters:
       "Reliable alignment reduces vibration energy before it is carried into the lineshaft, bearings, and bowl assembly.",
     fieldCheck:

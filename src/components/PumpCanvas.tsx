@@ -1,5 +1,6 @@
 import { Animated, Image, StyleSheet, Text, View } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Svg, { Line } from "react-native-svg";
 
 import { Hotspot } from "./Hotspot";
 import {
@@ -33,15 +34,30 @@ const KIOSK_DEFAULT_ZOOM = 2.05;
 const KIOSK_IMAGE_OFFSET_Y = 36;
 const oceanWaveBackground = require("../../assets/vertical/hydro-ocean-wave-background.gif");
 const HOTSPOT_MARKER_POSITIONS: Record<string, Point> = {
-  "pump-motor-alignment": { x: 43, y: 10 },
-  "packing-best-practice": { x: 43, y: 22 },
-  resonance: { x: 59, y: 35 },
-  "lineshaft-coupling": { x: 43, y: 47 },
-  "floating-spiders": { x: 59, y: 58 },
-  "stringent-tolerances": { x: 43, y: 69 },
-  "impeller-lock-collar": { x: 59, y: 78 },
-  "submerged-suction-umbrella": { x: 43, y: 86 },
-  "reduce-velocity": { x: 59, y: 92 },
+  // Markers sit outboard of the pump body; their y is aligned to each
+  // component's real location (topic.hotspot) so the dotted connector line
+  // lands on the feature it points at rather than following a mechanical zigzag.
+  "pump-motor-alignment": { x: 35, y: 12 },
+  "packing-best-practice": { x: 37, y: 23 },
+  resonance: { x: 67, y: 30 },
+  "lineshaft-coupling": { x: 35, y: 53 },
+  "floating-spiders": { x: 66, y: 64 },
+  "stringent-tolerances": { x: 38, y: 74 },
+  "impeller-lock-collar": { x: 67, y: 80 },
+  "submerged-suction-umbrella": { x: 35, y: 88 },
+  "reduce-velocity": { x: 66, y: 94 },
+};
+
+// Where each leader line terminates on the cross-section — the real component
+// location. Overrides the authored topic.hotspot for markers whose feature sits
+// on the column centerline (~x 49–50) rather than where the title callout was
+// originally authored. Ids not listed fall back to topic.hotspot.
+const HOTSPOT_COMPONENT_ANCHORS: Record<string, Point> = {
+  "lineshaft-coupling": { x: 49, y: 54 },
+  "floating-spiders": { x: 49, y: 66 },
+  "stringent-tolerances": { x: 48, y: 76 },
+  "impeller-lock-collar": { x: 50, y: 84 },
+  "reduce-velocity": { x: 51, y: 95 },
 };
 
 export function PumpCanvas({
@@ -127,10 +143,19 @@ export function PumpCanvas({
           x: (markerPosition.x / 100) * imageRect.width,
           y: (markerPosition.y / 100) * imageRect.height,
         };
+        // The connector line terminates on the component's real location on
+        // the cross-section, which is the topic's authored hotspot point.
+        const anchorPosition =
+          HOTSPOT_COMPONENT_ANCHORS[topic.id] ?? topic.hotspot;
+        const anchor = {
+          x: (anchorPosition.x / 100) * imageRect.width,
+          y: (anchorPosition.y / 100) * imageRect.height,
+        };
 
         return {
           topic,
           point,
+          anchor,
         };
       }),
     [imageRect.height, imageRect.width, topics],
@@ -160,8 +185,9 @@ export function PumpCanvas({
 
   const stageHotspotPoints = useMemo(
     () =>
-      hotspotPoints.map(({ point, topic }) => ({
+      hotspotPoints.map(({ point, anchor, topic }) => ({
         point: toStagePoint(point),
+        anchor: toStagePoint(anchor),
         topic,
       })),
     [hotspotPoints, toStagePoint],
@@ -173,8 +199,11 @@ export function PumpCanvas({
   const activePoint = activeHotspot?.point ?? { x: 0, y: 0 };
 
   const hotspotTouchSize =
-    variant === "kiosk" ? 64 : largeTouch ? 60 : isStacked ? 50 : 48;
+    variant === "kiosk" ? 88 : largeTouch ? 78 : isStacked ? 66 : 64;
   const activeRingSize = hotspotTouchSize + (variant === "kiosk" ? 18 : 16);
+  // Light dotted leader lines from each marker to its component on the pump.
+  const connectorWidth = variant === "kiosk" ? 3 : largeTouch ? 2.6 : 2.2;
+  const connectorDash = `${connectorWidth} ${connectorWidth * 3.2}`;
   const pulseOpacity = pulse.interpolate({
     inputRange: [0, 1],
     outputRange: [0.48, 0],
@@ -231,6 +260,34 @@ export function PumpCanvas({
                 style={styles.pumpImage}
               />
             </Animated.View>
+
+            {/* Leader lines — light dotted connectors from each numbered
+                marker to the component it labels on the cross-section. Drawn
+                beneath the markers so the circles cap the marker-side end. */}
+            <Svg
+              height={stageSize.height}
+              pointerEvents="none"
+              style={StyleSheet.absoluteFill}
+              width={stageSize.width}
+            >
+              {stageHotspotPoints.map(({ point, anchor, topic }) => {
+                const isActive = topic.id === activeTopic.id;
+                return (
+                  <Line
+                    key={topic.id}
+                    stroke={isActive ? colors.gold : colors.pumpBlue}
+                    strokeDasharray={connectorDash}
+                    strokeLinecap="round"
+                    strokeOpacity={isActive ? 0.9 : 0.5}
+                    strokeWidth={connectorWidth}
+                    x1={point.x}
+                    x2={anchor.x}
+                    y1={point.y}
+                    y2={anchor.y}
+                  />
+                );
+              })}
+            </Svg>
 
             {/* Permanent diagram header — title stays top-left and wraps. It is
                 not anchored to any hotspot and shows no floating callouts. */}
